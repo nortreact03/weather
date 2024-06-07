@@ -6,6 +6,16 @@ function Weather({weather}) {
         return <h3>Click on city name</h3>
     }
 
+    if (weather.error) {
+        return (
+            <>
+            <h1>Viga</h1>
+            {weather.error}
+            <p>Proovi mõne aja pärast uuesti</p>
+            </>
+        )
+    }
+
     let backroundStyle = 'defaultStyle'
 
     if (weather.current_weather.temperature > 20) {

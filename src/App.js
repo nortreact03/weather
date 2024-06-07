@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {fetchWeatherData, getAddressLocation} from './utilities.js'
 import Weather from './Weather.js';
 import NewLocation from './NewLocation.js';
@@ -23,6 +23,9 @@ function App() {
       weatherData: null
     },
   ]);
+  const [weather, setWeather] = useState(null)
+  const [isAddingActive, setIsAddingActive] = useState(false)
+  const [activeLocation, setActiveLocation] = useState(0)
 
   const addLocation = (location) => {
     setCities([
@@ -33,23 +36,41 @@ function App() {
       }
     ])
     setIsAddingActive(false)
+    setActiveLocation(cities.length-1)
   }
 
-  const [weather, setWeather] = useState(null)
-  const [isAddingActive, setIsAddingActive] = useState(false)
+  const loadLocationData = async (id) => {
+    try {
+      const locationData = await getAddressLocation(cities[id].name);
+      console.log(locationData)
+      const dataObj = await fetchWeatherData({
+        lat: locationData.lat,
+        long: locationData.lng,
+      })
+      console.log(dataObj)
+      setWeather(dataObj)
+    } catch (err) {
+      console.log(err.message)
+      setWeather({error: err.message})
+    }
+  }
 
-  const rowClicked = async (id) => {
+  
+  const rowClicked = (id) => {
     console.log('Click on row ' + cities[id].lat)
     setIsAddingActive(false)
-    const locationData = await getAddressLocation(cities[id].name);
-    console.log(locationData)
-    const dataObj = await fetchWeatherData({
-      lat: locationData.lat,
-      long: locationData.lng,
-    })
-    console.log(dataObj)
-    setWeather(dataObj)
+    //loadLocationData(id)
+    setActiveLocation(id)
   }
+
+  useEffect(()=> {
+    loadLocationData(activeLocation)
+  }, [activeLocation])
+
+
+
+
+
 
   let rightPaneJsx =  (
     <>
