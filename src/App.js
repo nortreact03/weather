@@ -4,43 +4,62 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import {useState} from 'react'
-import {fetchWeatherData} from './utilities.js'
+import {fetchWeatherData, getAddressLocation} from './utilities.js'
 import Weather from './Weather.js';
+import NewLocation from './NewLocation.js';
 
 function App() {
   const [cities, setCities] = useState([
     {
       name: 'Tallinn',
-      lat: 59.437,
-      long: 24.75,
       weatherData: null
     },
     {
       name: 'Pärnu',
-      lat: 58.391,
-      long: 24.4953,
       weatherData: null
     },
     {
       name: 'Tartu',
-      lat: 58.3780,
-      long: 26.7290,
       weatherData: null
     },
   ]);
 
+  const addLocation = (location) => {
+    setCities([
+      ...cities,
+      {
+        name: location,
+        weatherData: null
+      }
+    ])
+    setIsAddingActive(false)
+  }
+
   const [weather, setWeather] = useState(null)
+  const [isAddingActive, setIsAddingActive] = useState(false)
 
   const rowClicked = async (id) => {
     console.log('Click on row ' + cities[id].lat)
+    setIsAddingActive(false)
+    const locationData = await getAddressLocation(cities[id].name);
+    console.log(locationData)
     const dataObj = await fetchWeatherData({
-      lat: cities[id].lat,
-      long: cities[id].long,
+      lat: locationData.lat,
+      long: locationData.lng,
     })
     console.log(dataObj)
     setWeather(dataObj)
   }
 
+  let rightPaneJsx =  (
+    <>
+     <h1>Current weather in </h1>
+    <Weather weather={weather} />
+    </>
+  )
+  if (isAddingActive) {
+    rightPaneJsx = <NewLocation addLocation={addLocation} />
+  }
   return (
     <>
     <Container>
@@ -52,10 +71,15 @@ function App() {
               {city.name}
             </div>
           ))}
+          <button 
+            className='btn btn-link'
+            onClick={()=>setIsAddingActive(true)}
+          >
+              Add location
+            </button>
         </Col>
         <Col>
-          <h1>Current weather in </h1>
-          <Weather weather={weather} />
+         {rightPaneJsx}
         </Col>
       </Row>
     </Container>
